@@ -1,92 +1,78 @@
-from tkinter import *
-import winsound
+# FRIDAY NIGHT LIBERATIN'
 
-# configure the window
-window = Tk()
-window.title("hc-arcade-project")
-window.attributes("-fullscreen", True)
-window.configure(background="black")
-window.configure(cursor="none")
+import pygame
 
-# define images
-sm_btn_bg = PhotoImage(file="img/storymode.png")
-sm_btn_bg_alt = PhotoImage(file="img/storymode-alt.png")
-fp_btn_bg = PhotoImage(file="img/freeplay.png")
-fp_btn_bg_alt = PhotoImage(file="img/freeplay-alt.png")
-op_btn_bg = PhotoImage(file="img/options.png")
-op_btn_bg_alt = PhotoImage(file="img/options-alt.png")
+# initialize pygame
+pygame.init()
+screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
+clock = pygame.time.Clock()
+state = 1
+width = screen.get_width()
+height = screen.get_height()
 
-# create buttons on main screen
-menu_btn_1 = Button(window, image=sm_btn_bg_alt, bg="black", borderwidth=0, activebackground="black")
-menu_btn_1.grid(row=0, column=0)
+# define icons
+icons = {
+    "sm-btn": pygame.image.load("img/storymode.png"),
+    "sm-btn-alt": pygame.transform.scale_by(pygame.image.load("img/storymode-alt.png"), 1.1),
+    "fp-btn": pygame.image.load("img/freeplay.png"),
+    "fp-btn-alt": pygame.transform.scale_by(pygame.image.load("img/freeplay-alt.png"), 1.1),
+    "op-btn": pygame.image.load("img/options.png"),
+    "op-btn-alt": pygame.transform.scale_by(pygame.image.load("img/options-alt.png"), 1.1)
+}
 
-menu_btn_2 = Button(window, image=fp_btn_bg, bg="black", borderwidth=0, activebackground="black")
-menu_btn_2.grid(row=1, column=0)
+def playsound(filename, loop):
+    pygame.mixer.init()
+    pygame.mixer.music.load(filename)
+    pygame.mixer.music.play(-1 if loop else 1)
 
-menu_btn_3 = Button(window, image=op_btn_bg, bg="black", borderwidth=0, activebackground="black")
-menu_btn_3.grid(row=2, column=0)
+def stopsound():
+    pygame.mixer.music.stop()
 
-window.grid_rowconfigure(0, weight=1)
-window.grid_rowconfigure(1, weight=1)
-window.grid_rowconfigure(2, weight=1)
-window.grid_columnconfigure(0, weight=1)
+# menu variables
+menu_index = -1
+selection = 0
 
-# initialize the selected button
-selected_btn = 0
-previous_btn = None
-
-def update_btn_states():
-    if selected_btn == 0:
-        menu_btn_1.config(image=sm_btn_bg_alt)
-        menu_btn_2.config(image=fp_btn_bg)
-        menu_btn_3.config(image=op_btn_bg)
-    elif selected_btn == 1:
-        menu_btn_1.config(image=sm_btn_bg)
-        menu_btn_2.config(image=fp_btn_bg_alt)
-        menu_btn_3.config(image=op_btn_bg)
-    elif selected_btn == 2:
-        menu_btn_1.config(image=sm_btn_bg)
-        menu_btn_2.config(image=fp_btn_bg)
-        menu_btn_3.config(image=op_btn_bg_alt)
-
-def arrow_up_handler(e):
-    global previous_btn
-    global selected_btn
+def draw_main_menu():
+    if selection == 0:
+        screen.blit(icons["sm-btn-alt"], icons["sm-btn-alt"].get_rect(center=(width/2, height/3 - height/6)))
+    else:
+        screen.blit(icons["sm-btn"], icons["sm-btn"].get_rect(center=(width/2, height/3 - height/6)))
     
-    # set the previous btn to the current btn index
-    previous_btn = selected_btn
+    if selection == 1:
+        screen.blit(icons["fp-btn-alt"], icons["fp-btn-alt"].get_rect(center=(width/2, height/3*2 - height/6)))
+    else:
+        screen.blit(icons["fp-btn"], icons["fp-btn"].get_rect(center=(width/2, height/3*2 - height/6)))
 
-    # find the next btn index
-    selected_btn -= -2 if selected_btn == 0 else 1
+    if selection == 2:
+        screen.blit(icons["op-btn-alt"], icons["op-btn-alt"].get_rect(center=(width/2, height/3*3 - height/6)))
+    else:
+        screen.blit(icons["op-btn"], icons["op-btn"].get_rect(center=(width/2, height/3*3 - height/6)))
 
-    # change the state of the btns
-    update_btn_states()
+# play menu music
+playsound("audio/menu-music.wav", True)
 
-def arrow_down_handler(e):
-    global previous_btn
-    global selected_btn
+while state:
+    # poll for events
+    for e in pygame.event.get():
+        # menu-0 key events
+        if e.type == pygame.KEYDOWN and menu_index == -1:
+            if e.key == pygame.K_UP:
+                selection += -1 if selection != 0 else 2
+            if e.key == pygame.K_DOWN:
+                selection += 1 if selection != 2 else -2
+            if e.key == pygame.K_RETURN:
+                menu_index = selection
+                stopsound()
+
+    # set background
+    screen.fill("black")
+
+    if menu_index == -1: draw_main_menu()
     
-    # set the previous btn to the current btn index
-    previous_btn = selected_btn
+    # render the screen
+    pygame.display.flip()
 
-    # find the next btn index
-    selected_btn += -2 if selected_btn == 2 else 1
+    # limit FPS
+    clock.tick(60)
 
-    # change the state of the btns
-    update_btn_states()
-
-def return_handler(e):
-    winsound.PlaySound(None, winsound.SND_PURGE)
-    menu_btn_1.grid_forget()
-    menu_btn_2.grid_forget()
-    menu_btn_3.grid_forget()
-    print("STORY MODE" if selected_btn == 0 else "FREEPLAY" if selected_btn == 1 else "OPTIONS")
-
-window.bind("<Up>", arrow_up_handler)
-window.bind("<Down>", arrow_down_handler)
-window.bind("<Return>", return_handler)
-
-winsound.PlaySound("audio\menu-music.wav", winsound.SND_ASYNC | winsound.SND_LOOP)
-
-# display the tk window
-window.mainloop()
+pygame.quit()
