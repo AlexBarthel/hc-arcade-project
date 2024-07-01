@@ -1,16 +1,16 @@
-# FRIDAY NIGHT LIBERATIN'
-
 import pygame
 
-# initialize pygame
+# Initialize pygame
 pygame.init()
+# Configure pygame display
 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
-clock = pygame.time.Clock()
-state = 1
 width = screen.get_width()
 height = screen.get_height()
 
-# define icons
+clock = pygame.time.Clock()
+state = 1
+
+# Preload menu icons
 icons = {
     "sm-btn": pygame.image.load("img/storymode.png"),
     "sm-btn-alt": pygame.transform.scale_by(pygame.image.load("img/storymode-alt.png"), 1.1),
@@ -21,40 +21,42 @@ icons = {
 }
 
 def playsound(filename, loop):
+    # Use pygame's built-in mixer to play audio files
+    # Steps: initialize -> load -> play
     pygame.mixer.init()
     pygame.mixer.music.load(filename)
     pygame.mixer.music.play(-1 if loop else 1)
 
 def stopsound():
+    # Stop all playing audio
     pygame.mixer.music.stop()
 
-# menu variables
+# Menu variables for UI
 menu_index = -1
 selection = 0
+fade_in_value = 255
 
 def draw_main_menu():
-    if selection == 0:
-        screen.blit(icons["sm-btn-alt"], icons["sm-btn-alt"].get_rect(center=(width/2, height/3 - height/6)))
-    else:
-        screen.blit(icons["sm-btn"], icons["sm-btn"].get_rect(center=(width/2, height/3 - height/6)))
-    
-    if selection == 1:
-        screen.blit(icons["fp-btn-alt"], icons["fp-btn-alt"].get_rect(center=(width/2, height/3*2 - height/6)))
-    else:
-        screen.blit(icons["fp-btn"], icons["fp-btn"].get_rect(center=(width/2, height/3*2 - height/6)))
+    # Store button locations on screen
+    buttons = [
+        ("sm-btn", "sm-btn-alt", height / 3 - height / 6),
+        ("fp-btn", "fp-btn-alt", height / 3 * 2 - height / 6),
+        ("op-btn", "op-btn-alt", height / 3 * 3 - height / 6),
+    ]
+    # Loop over every button by index and check if its selected.
+    # If selected, then swap to the alternate button art, otherwise
+    # stick to the original file.
+    for index, (btn, btn_alt, pos_y) in enumerate(buttons):
+        key = btn_alt if selection == index else btn
+        screen.blit(icons[key], icons[key].get_rect(center=(width / 2, pos_y)))
 
-    if selection == 2:
-        screen.blit(icons["op-btn-alt"], icons["op-btn-alt"].get_rect(center=(width/2, height/3*3 - height/6)))
-    else:
-        screen.blit(icons["op-btn"], icons["op-btn"].get_rect(center=(width/2, height/3*3 - height/6)))
-
-# play menu music
+# Play menu music on load
 playsound("audio/menu-music.wav", True)
 
 while state:
-    # poll for events
+    # Listen for mouse/keyboard events
     for e in pygame.event.get():
-        # menu-0 key events
+        # Main menu events
         if e.type == pygame.KEYDOWN and menu_index == -1:
             if e.key == pygame.K_UP:
                 selection += -1 if selection != 0 else 2
@@ -64,15 +66,28 @@ while state:
                 menu_index = selection
                 stopsound()
 
-    # set background
+    # Set background color
     screen.fill("black")
 
     if menu_index == -1: draw_main_menu()
+    if menu_index == 0: draw_story_mode()
+    if menu_index == 1: draw_freeplay()
+    if menu_index == 2: draw_options()
+    # if menu_index == 3: draw_level(level_id)
+
+    # Fade in on window load
+    if fade_in_value > 0:
+        fade_in_value -= 5
+        fade_surface = pygame.Surface((width, height))
+        fade_surface.fill((0, 0, 0))
+        fade_surface.set_alpha(fade_in_value)
+        screen.blit(fade_surface, (0, 0))
     
-    # render the screen
+    # Render the screen
     pygame.display.flip()
 
-    # limit FPS
+    # Limit FPS to 60
     clock.tick(60)
 
+# Stop pygame to avoid any issues
 pygame.quit()
