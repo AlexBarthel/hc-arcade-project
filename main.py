@@ -24,7 +24,9 @@ icons = {
 
 # Preload backgrounds
 backgrounds = {
-    "WEEK 1": pygame.image.load("img/Week 1.jpg")
+    "WEEK 1": pygame.image.load("img/Week 1.jpg"),
+    "WEEK 2": pygame.image.load("img/Week 2.jpg"),
+    "WEEK 3": pygame.image.load("img/Week 3.jpg"),
 }
 
 # Preload fonts
@@ -61,10 +63,11 @@ def draw_main_menu():
         ("OPTIONS", height / 3 * 3 - height / 6),
     ]
 
-    # Loop over every button by index and check if its selected.
-    # If selected, then increase the size by a factor of 1.1
+    # Render the menu buttons
     for index, (value, y) in enumerate(btns):
-        text_surface = fonts["Swiss 721 Extended Bold"].render(value, 0, (255, 255, 255))
+        text_surface = fonts["Swiss 721 Extended Bold"].render(
+            value, 1, (255, 255, 255)
+        )
         if index == selection:
             text_surface = pygame.transform.scale_by(text_surface, 1.1)
         screen.blit(
@@ -81,15 +84,24 @@ def draw_story_mode():
         ("WEEK 3", height / 3 * 3 - height / 6),
     ]
 
-    # Loop over every button by index and check if its selected.
-    # If selected, then increase the size by a factor of 1.1
+    # Get the selected button
+    btn_id = btns[selection][0]
+
+    # Draw week-specific backgrounds
+    screen.blit(backgrounds[btn_id], backgrounds[btn_id].get_rect())
+
+    # Render the menu buttons
     for index, (value, y) in enumerate(btns):
-        text_surface = fonts["Swiss 721 Extended Bold"].render(value, 0, (255, 255, 255))
+        text_surface = fonts["Swiss 721 Extended Bold"].render(
+            value, 1, (255, 255, 255)
+        )
         offset = 0
         if index == selection:
-            screen.blit(backgrounds[value], backgrounds[value].get_rect())
+            # Scale the selected option by 110%
             text_surface = pygame.transform.scale_by(text_surface, 1.1)
+            # Offset to the right
             offset = width / 24
+
         screen.blit(
             text_surface,
             (width / 6 - text_surface.get_rect().centerx + offset, y),
